@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>What is this flower
+    </title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>이 꽃은 무엇입니까?</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <label for="imageInput" class="custom-file-upload">
+                <input type="file" id="imageInput" accept="image/*" required onchange="previewImage()">
+                이미지 업로드
+            </label>
+            <button type="button" onclick="uploadImage()">Submit</button>
+            <div id="imagePreviewContainer">
+                <img id="imagePreview" alt="Image Preview" />
+            </div>
+        </form>
+    </div>
+    <div class="modal-container" id="myModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>결과</h2>
+            <div id="loadingSpinner" class="spinner"></div>
+            <div id="uploadResultContainer"></div>
+        </div>
+    </div>
+    <script>
+        function openModal() {
+            document.getElementById('myModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('myModal').style.display = 'none';
+        }
+
+        window.onclick = function (event) {
+            const modal = document.getElementById('myModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+        function uploadImage() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select an image to upload.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const modal = document.getElementById('myModal');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const uploadResultContainer = document.getElementById('uploadResultContainer');
+
+            // 팝업 표시 및 로딩 스피너 표시
+            openModal();
+            loadingSpinner.style.display = 'block';
+            uploadResultContainer.innerText = '';
+
+
+            fetch('http://localhost:3000/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(result => {
+                    // 서버 응답 후 로딩 스피너 숨기고 결과 표시
+                    loadingSpinner.style.display = 'none';
+                    uploadResultContainer.innerHTML = result;
+                })
+                .catch(error => {
+                    console.error('Error during image upload:', error);
+                    alert('Error during image upload. Please try again.');
+                    // 에러 발생 시 로딩 스피너 숨기기
+                    loadingSpinner.style.display = 'none';
+                });
+        }
+
+        function previewImage() {
+            const fileInput = document.getElementById('imageInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    imagePreview.src = e.target.result;
+                    imagePreviewContainer.style.display = 'block';
+                };
+
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.src = '';
+                imagePreviewContainer.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>
